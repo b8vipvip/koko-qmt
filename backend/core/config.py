@@ -1,6 +1,7 @@
 """应用配置模块。"""
 
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,6 +18,23 @@ class Settings(BaseSettings):
     qmt_account_type: str = Field(default="STOCK", alias="QMT_ACCOUNT_TYPE")
     trade_mode: str = Field(default="paper", alias="TRADE_MODE")
     enable_real_trade: bool = Field(default=False, alias="ENABLE_REAL_TRADE")
+    postgres_host: str = Field(default="127.0.0.1", alias="POSTGRES_HOST")
+    postgres_port: int = Field(default=5432, alias="POSTGRES_PORT")
+    postgres_db: str = Field(default="koko_qmt", alias="POSTGRES_DB")
+    postgres_user: str = Field(default="postgres", alias="POSTGRES_USER")
+    postgres_password: str = Field(default="", alias="POSTGRES_PASSWORD")
+    database_url: str = Field(default="", alias="DATABASE_URL")
+
+    def get_database_url(self) -> str:
+        """返回 SQLAlchemy PostgreSQL 连接串，优先使用 DATABASE_URL。"""
+
+        if self.database_url:
+            return self.database_url
+
+        user = quote_plus(self.postgres_user)
+        password = quote_plus(self.postgres_password)
+        auth = f"{user}:{password}" if password else user
+        return f"postgresql+psycopg2://{auth}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     model_config = SettingsConfigDict(
         env_file=(".env", ".env.example"),
