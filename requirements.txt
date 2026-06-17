@@ -1,0 +1,14 @@
+﻿fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+pandas
+numpy
+loguru
+streamlit
+requests
+plotly
+python-dotenv
+pytest
