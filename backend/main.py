@@ -10,6 +10,7 @@ from backend.core.response import error_response
 from backend.routers.health import router as health_router
 from backend.routers.qmt import router as qmt_router
 from backend.routers.db import router as db_router
+from backend.routers.data import router as data_router
 
 setup_logger()
 
@@ -17,6 +18,7 @@ app = FastAPI(title="koko-qmt backend", version="0.1.0")
 app.include_router(health_router)
 app.include_router(qmt_router)
 app.include_router(db_router)
+app.include_router(data_router)
 
 
 @app.on_event("startup")
