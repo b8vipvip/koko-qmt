@@ -84,10 +84,15 @@ function Ensure-SshRemote() {
         Fail "当前远程仓库地址不是 GitHub SSH/HTTPS：$remoteUrl"
     }
 
-    $sshResult = ssh -o BatchMode=yes -T git@github.com 2>&1
-    $sshText = ($sshResult | Out-String)
+    # GitHub SSH 测试成功时通常会输出：
+    # Hi username! You've successfully authenticated, but GitHub does not provide shell access.
+    # 注意：这条成功提示可能通过 stderr 输出，且 ssh -T 的退出码可能不是 0，所以不能只按退出码判断。
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $sshText = (& ssh -o BatchMode=yes -T git@github.com 2>&1 | Out-String)
+    $ErrorActionPreference = $oldErrorActionPreference
 
-    if ($sshText -match "successfully authenticated" -or $sshText -match "^Hi\s+") {
+    if ($sshText -match "successfully authenticated" -or $sshText -match "Hi\s+.+!.*authenticated") {
         Ok "GitHub SSH 认证正常。"
     }
     else {
@@ -365,3 +370,4 @@ try {
 catch {
     Fail $_.Exception.Message
 }
+
