@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     app_env: str = Field(default="local", alias="APP_ENV")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
+    qmt_client_path: str = Field(default="", alias="QMT_CLIENT_PATH")
+    qmt_account_id: str = Field(default="", alias="QMT_ACCOUNT_ID")
+    qmt_account_type: str = Field(default="STOCK", alias="QMT_ACCOUNT_TYPE")
     trade_mode: str = Field(default="paper", alias="TRADE_MODE")
     enable_real_trade: bool = Field(default=False, alias="ENABLE_REAL_TRADE")
 
