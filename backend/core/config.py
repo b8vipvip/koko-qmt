@@ -1,14 +1,18 @@
 """应用配置模块。"""
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import quote_plus
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_ENV_FILE = _PROJECT_ROOT / ".env"
 
 
 class Settings(BaseSettings):
-    """从环境变量或 .env 文件读取后端基础配置。"""
+    """从环境变量或项目根目录 .env 文件读取后端基础配置。"""
 
     app_env: str = Field(default="local", alias="APP_ENV")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
@@ -25,19 +29,29 @@ class Settings(BaseSettings):
     postgres_password: str = Field(default="", alias="POSTGRES_PASSWORD")
     database_url: str = Field(default="", alias="DATABASE_URL")
 
-    def get_database_url(self) -> str:
-        """返回 SQLAlchemy PostgreSQL 连接串，优先使用 DATABASE_URL。"""
+    @model_validator(mode="after")
+    def build_database_url(self) -> "Settings":
+        """DATABASE_URL 为空时，根据 POSTGRES_* 配置拼接连接串。"""
 
-        if self.database_url:
-            return self.database_url
+        if self.database_url.strip():
+            return self
 
         user = quote_plus(self.postgres_user)
         password = quote_plus(self.postgres_password)
         auth = f"{user}:{password}" if password else user
-        return f"postgresql+psycopg2://{auth}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        self.database_url = (
+            f"postgresql+psycopg2://{auth}@"
+            f"{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+        return self
+
+    def get_database_url(self) -> str:
+        """返回 SQLAlchemy PostgreSQL 连接串，优先使用 DATABASE_URL。"""
+
+        return self.database_url
 
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.example"),
+        env_file=_ENV_FILE if _ENV_FILE.exists() else None,
         env_file_encoding="utf-8-sig",
         extra="ignore",
     )
