@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter
 
-from backend.core.config import settings
 from backend.core.response import success_response
 
 router = APIRouter(prefix="/api/v1", tags=["health"])
@@ -16,6 +15,6 @@ def health_check() -> dict:
         message="koko-qmt backend is running",
         data={
             "app": "koko-qmt",
-            "mode": settings.app_env,
+            "mode": "local",
         },
     )
